@@ -22,13 +22,9 @@
 </head>
 <body>
   <div id="root"><div id="loading">Loading dashboard...</div></div>
-  <script type="text/babel">
-const { useState, useMemo } = React;
-const { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  Legend, ResponsiveContainer, Area, AreaChart, ReferenceLine, Cell,
-  ScatterChart, Scatter, ComposedChart, ReferenceArea } = Recharts;
-
-
+  
+  <!-- DATA (plain JS) -->
+  <script>
 const fisherReal = (n, i) => ((1 + n / 100) / (1 + i / 100) - 1) * 100;
 
 /* ═══════ CENTRAL BANKS ═══════ */
@@ -240,6 +236,15 @@ const unemploymentData = [
   {country:"Finland",unemp:10.3,youth:20.0},
   {country:"Spain",unemp:10.0,youth:23.4},
 ];
+
+  </script>
+  
+  <!-- COMPONENTS (Babel) -->
+  <script type="text/babel">
+const { useState, useMemo } = React;
+const { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  Legend, ResponsiveContainer, Area, AreaChart, ReferenceLine, Cell,
+  ScatterChart, Scatter, ComposedChart, ReferenceArea } = Recharts;
 
 /* ═══════ UI COMPONENTS ═══════ */
 const Pill = ({active,onClick,children,color}) => (
