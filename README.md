@@ -75,4 +75,4 @@ MIT — free to use, modify, and distribute.
 
 ## Author
 
-[Jón Egill Egilsson](https://jonegilsson.com)
+[Jón Helgi Egilsson](https://jonegilsson.com)
