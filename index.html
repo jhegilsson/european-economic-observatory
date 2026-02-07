@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iceland vs Europe — European Economic Observatory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone@7.24.0/babel.min.js"></script>
+  <style>
+    * { margin: 0; box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background: #f5f6f8; }
+    ::-webkit-scrollbar { height: 3px; }
+    ::-webkit-scrollbar-thumb { background: #c4c8cc; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useMemo } = React;
+    const { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+      Legend, ResponsiveContainer, Area, AreaChart, ReferenceLine, Cell,
+      ScatterChart, Scatter, ComposedChart, ReferenceArea } = Recharts;
+
+
+const fisherReal = (n, i) => ((1 + n / 100) / (1 + i / 100) - 1) * 100;
+
+/* ═══════ CENTRAL BANKS ═══════ */
+const eurozoneMembers = [
+  "Germany","France","Italy","Spain","Netherlands","Belgium","Austria","Finland",
+  "Ireland","Portugal","Greece","Luxembourg","Slovenia","Slovakia","Estonia",
+  "Latvia","Lithuania","Malta","Cyprus","Croatia","Bulgaria"
+];
+const centralBanks = [
+  { id:"ecb",     abbr:"ECB", engName:"European Central Bank",                        localName:null,                           ccy:"EUR", rate:2.00, inflation:2.0, gdp:1.3, gdpP:"Q4 '25 YoY", color:"#003399", country:"Eurozone (21)" },
+  { id:"iceland", abbr:"CBI", engName:"Central Bank of Iceland",                       localName:"Seðlabanki Íslands",           ccy:"ISK", rate:7.25, inflation:4.0, gdp:1.2, gdpP:"Q3 '25 YoY", color:"#0F4C81", country:"Iceland" },
+  { id:"hungary", abbr:"MNB", engName:"Hungarian National Bank",                       localName:"Magyar Nemzeti Bank",          ccy:"HUF", rate:6.50, inflation:3.6, gdp:0.7, gdpP:"Q4 '25 est", color:"#CE2939", country:"Hungary" },
+  { id:"romania", abbr:"BNR", engName:"National Bank of Romania",                      localName:"Banca Națională a României",   ccy:"RON", rate:6.50, inflation:5.5, gdp:1.5, gdpP:"2025 est",   color:"#002B7F", country:"Romania" },
+  { id:"poland",  abbr:"NBP", engName:"National Bank of Poland",                       localName:"Narodowy Bank Polski",         ccy:"PLN", rate:4.00, inflation:2.6, gdp:3.3, gdpP:"2025 est",   color:"#DC143C", country:"Poland" },
+  { id:"norway",  abbr:"NB",  engName:"Norges Bank",                                   localName:null,                           ccy:"NOK", rate:4.00, inflation:3.0, gdp:2.1, gdpP:"Q3 '25 YoY", color:"#BA0C2F", country:"Norway" },
+  { id:"uk",      abbr:"BoE", engName:"Bank of England",                               localName:null,                           ccy:"GBP", rate:3.75, inflation:3.2, gdp:1.3, gdpP:"Q3 '25 YoY", color:"#1D3557", country:"UK" },
+  { id:"czech",   abbr:"CNB", engName:"Czech National Bank",                           localName:"Česká národní banka",          ccy:"CZK", rate:3.50, inflation:2.1, gdp:2.7, gdpP:"Q3 '25 YoY", color:"#11457E", country:"Czech Republic" },
+  { id:"denmark", abbr:"DNB", engName:"Denmark's National Bank",                       localName:"Danmarks Nationalbank",        ccy:"DKK", rate:2.10, inflation:1.4, gdp:1.5, gdpP:"Q4 '25 est", color:"#C60C30", country:"Denmark" },
+  { id:"sweden",  abbr:"RB",  engName:"The Riksbank",                                  localName:"Sveriges Riksbank",            ccy:"SEK", rate:1.75, inflation:1.7, gdp:1.5, gdpP:"Q3 '25 YoY", color:"#006AA7", country:"Sweden" },
+  { id:"snb",     abbr:"SNB", engName:"Swiss National Bank",                           localName:"Schweizerische Nationalbank",  ccy:"CHF", rate:0.00, inflation:0.0, gdp:1.4, gdpP:"Q3 '25 YoY", color:"#D52B1E", country:"Switzerland" },
+];
+
+/* ═══════ 10Y YIELDS ═══════ */
+const sovereignYields = [
+  { country:"Germany",       yield10:2.68, group:"EZ Core",  color:"#FFCC00", flag:"🇩🇪" },
+  { country:"France",        yield10:3.10, group:"EZ Core",  color:"#002395", flag:"🇫🇷" },
+  { country:"Netherlands",   yield10:2.80, group:"EZ Core",  color:"#FF6600", flag:"🇳🇱" },
+  { country:"Belgium",       yield10:2.95, group:"EZ Core",  color:"#FDDA24", flag:"🇧🇪" },
+  { country:"Austria",       yield10:2.85, group:"EZ Core",  color:"#ED2939", flag:"🇦🇹" },
+  { country:"Finland",       yield10:2.75, group:"EZ Core",  color:"#003580", flag:"🇫🇮" },
+  { country:"Luxembourg",    yield10:2.72, group:"EZ Core",  color:"#00A1DE", flag:"🇱🇺" },
+  { country:"Italy",         yield10:3.43, group:"EZ South", color:"#008C45", flag:"🇮🇹" },
+  { country:"Spain",         yield10:3.05, group:"EZ South", color:"#AA151B", flag:"🇪🇸" },
+  { country:"Portugal",      yield10:3.00, group:"EZ South", color:"#006600", flag:"🇵🇹" },
+  { country:"Greece",        yield10:3.20, group:"EZ South", color:"#0D5EAF", flag:"🇬🇷" },
+  { country:"Ireland",       yield10:2.90, group:"EZ South", color:"#009A49", flag:"🇮🇪" },
+  { country:"Cyprus",        yield10:3.30, group:"EZ South", color:"#D47600", flag:"🇨🇾" },
+  { country:"Malta",         yield10:3.25, group:"EZ South", color:"#CF142B", flag:"🇲🇹" },
+  { country:"Slovakia",      yield10:3.20, group:"EZ East",  color:"#0B4EA2", flag:"🇸🇰" },
+  { country:"Slovenia",      yield10:3.00, group:"EZ East",  color:"#005DA6", flag:"🇸🇮" },
+  { country:"Croatia",       yield10:3.40, group:"EZ East",  color:"#171796", flag:"🇭🇷" },
+  { country:"Bulgaria",      yield10:3.85, group:"EZ East",  color:"#00966E", flag:"🇧🇬" },
+  { country:"Latvia",        yield10:3.10, group:"EZ East",  color:"#9E3039", flag:"🇱🇻" },
+  { country:"Lithuania",     yield10:3.10, group:"EZ East",  color:"#006A44", flag:"🇱🇹" },
+  { country:"Estonia",       yield10:3.15, group:"EZ East",  color:"#4891D9", flag:"🇪🇪" },
+  { country:"Poland",        yield10:5.50, group:"EU non-€", color:"#DC143C", flag:"🇵🇱" },
+  { country:"Czech Republic",yield10:3.80, group:"EU non-€", color:"#11457E", flag:"🇨🇿" },
+  { country:"Hungary",       yield10:6.50, group:"EU non-€", color:"#CE2939", flag:"🇭🇺" },
+  { country:"Romania",       yield10:6.30, group:"EU non-€", color:"#002B7F", flag:"🇷🇴" },
+  { country:"Denmark",       yield10:2.30, group:"EU non-€", color:"#C60C30", flag:"🇩🇰" },
+  { country:"Sweden",        yield10:2.20, group:"EU non-€", color:"#006AA7", flag:"🇸🇪" },
+  { country:"Iceland",       yield10:6.71, group:"Non-EU",   color:"#0F4C81", flag:"🇮🇸" },
+  { country:"Norway",        yield10:3.50, group:"Non-EU",   color:"#BA0C2F", flag:"🇳🇴" },
+  { country:"UK",            yield10:4.25, group:"Non-EU",   color:"#1D3557", flag:"🇬🇧" },
+  { country:"Switzerland",   yield10:0.45, group:"Non-EU",   color:"#D52B1E", flag:"🇨🇭" },
+];
+
+/* ═══════ YIELD CURVES (with months for linear x-axis) ═══════ */
+const tenorMonths = {"3M":0.25,"1Y":1,"2Y":2,"5Y":5,"10Y":10,"15Y":15,"30Y":30};
+const yieldCurves = {
+  Iceland:       [{t:"3M",y:7.10},{t:"1Y",y:6.85},{t:"2Y",y:6.70},{t:"5Y",y:6.55},{t:"10Y",y:6.71},{t:"15Y",y:6.80}],
+  Germany:       [{t:"3M",y:2.05},{t:"1Y",y:2.10},{t:"2Y",y:2.18},{t:"5Y",y:2.38},{t:"10Y",y:2.68},{t:"30Y",y:2.95}],
+  France:        [{t:"3M",y:2.10},{t:"1Y",y:2.25},{t:"2Y",y:2.45},{t:"5Y",y:2.78},{t:"10Y",y:3.10},{t:"30Y",y:3.55}],
+  Italy:         [{t:"3M",y:2.20},{t:"1Y",y:2.50},{t:"2Y",y:2.65},{t:"5Y",y:3.00},{t:"10Y",y:3.43},{t:"30Y",y:3.95}],
+  Spain:         [{t:"3M",y:2.10},{t:"1Y",y:2.30},{t:"2Y",y:2.45},{t:"5Y",y:2.75},{t:"10Y",y:3.05},{t:"30Y",y:3.60}],
+  Netherlands:   [{t:"3M",y:2.05},{t:"1Y",y:2.12},{t:"2Y",y:2.22},{t:"5Y",y:2.48},{t:"10Y",y:2.80},{t:"30Y",y:3.05}],
+  Greece:        [{t:"3M",y:2.30},{t:"1Y",y:2.55},{t:"2Y",y:2.72},{t:"5Y",y:2.95},{t:"10Y",y:3.20},{t:"30Y",y:3.70}],
+  Poland:        [{t:"3M",y:3.90},{t:"1Y",y:4.20},{t:"2Y",y:4.50},{t:"5Y",y:5.10},{t:"10Y",y:5.50},{t:"30Y",y:5.80}],
+  Hungary:       [{t:"3M",y:6.30},{t:"1Y",y:6.20},{t:"2Y",y:6.10},{t:"5Y",y:6.25},{t:"10Y",y:6.50},{t:"30Y",y:6.70}],
+  Romania:       [{t:"3M",y:6.20},{t:"1Y",y:6.10},{t:"2Y",y:6.00},{t:"5Y",y:6.10},{t:"10Y",y:6.30},{t:"30Y",y:6.50}],
+  "Czech Republic":[{t:"3M",y:3.40},{t:"1Y",y:3.30},{t:"2Y",y:3.30},{t:"5Y",y:3.50},{t:"10Y",y:3.80},{t:"30Y",y:4.10}],
+  Denmark:       [{t:"3M",y:2.05},{t:"1Y",y:2.00},{t:"2Y",y:1.95},{t:"5Y",y:2.08},{t:"10Y",y:2.30},{t:"30Y",y:2.55}],
+  Sweden:        [{t:"3M",y:1.70},{t:"1Y",y:1.75},{t:"2Y",y:1.80},{t:"5Y",y:1.98},{t:"10Y",y:2.20},{t:"30Y",y:2.45}],
+  UK:            [{t:"3M",y:3.70},{t:"1Y",y:3.60},{t:"2Y",y:3.55},{t:"5Y",y:3.80},{t:"10Y",y:4.25},{t:"30Y",y:4.85}],
+  Norway:        [{t:"3M",y:3.90},{t:"1Y",y:3.70},{t:"2Y",y:3.50},{t:"5Y",y:3.40},{t:"10Y",y:3.50},{t:"30Y",y:3.70}],
+  Switzerland:   [{t:"3M",y:-0.05},{t:"1Y",y:0.02},{t:"2Y",y:0.05},{t:"5Y",y:0.15},{t:"10Y",y:0.45},{t:"30Y",y:0.65}],
+};
+const ycColors = {Iceland:"#0F4C81",Germany:"#FFCC00",France:"#002395",Italy:"#008C45",Spain:"#AA151B",Netherlands:"#FF6600",Greece:"#0D5EAF",Poland:"#DC143C",Hungary:"#CE2939",Romania:"#002B7F","Czech Republic":"#11457E",Denmark:"#C60C30",Sweden:"#006AA7",UK:"#1D3557",Norway:"#BA0C2F",Switzerland:"#D52B1E"};
+
+/* ═══════ HISTORICAL RATES ═══════ */
+const histRates = [
+  {date:"Jan 2020",Iceland:3.00,ECB:0.00,UK:0.75,Norway:1.50,Sweden:0.00,Switzerland:-0.75,Poland:1.50,Hungary:0.90,"Czech Republic":2.00,Romania:2.50},
+  {date:"Jun 2020",Iceland:1.00,ECB:0.00,UK:0.10,Norway:0.00,Sweden:0.00,Switzerland:-0.75,Poland:0.10,Hungary:0.60,"Czech Republic":0.25,Romania:1.75},
+  {date:"Jan 2021",Iceland:0.75,ECB:0.00,UK:0.10,Norway:0.00,Sweden:0.00,Switzerland:-0.75,Poland:0.10,Hungary:0.60,"Czech Republic":0.25,Romania:1.25},
+  {date:"Jun 2021",Iceland:1.00,ECB:0.00,UK:0.10,Norway:0.00,Sweden:0.00,Switzerland:-0.75,Poland:0.10,Hungary:0.90,"Czech Republic":0.50,Romania:1.25},
+  {date:"Jan 2022",Iceland:2.75,ECB:0.00,UK:0.25,Norway:0.50,Sweden:0.00,Switzerland:-0.75,Poland:2.25,Hungary:2.90,"Czech Republic":3.75,Romania:2.00},
+  {date:"Jun 2022",Iceland:4.75,ECB:0.00,UK:1.25,Norway:1.25,Sweden:0.75,Switzerland:-0.25,Poland:6.00,Hungary:7.75,"Czech Republic":7.00,Romania:3.75},
+  {date:"Jan 2023",Iceland:6.00,ECB:2.50,UK:3.50,Norway:2.75,Sweden:2.50,Switzerland:1.00,Poland:6.75,Hungary:13.00,"Czech Republic":7.00,Romania:7.00},
+  {date:"Jun 2023",Iceland:9.25,ECB:3.50,UK:5.00,Norway:3.75,Sweden:3.75,Switzerland:1.75,Poland:6.75,Hungary:13.00,"Czech Republic":7.00,Romania:7.00},
+  {date:"Jan 2024",Iceland:9.25,ECB:4.00,UK:5.25,Norway:4.50,Sweden:4.00,Switzerland:1.75,Poland:5.75,Hungary:10.00,"Czech Republic":6.75,Romania:7.00},
+  {date:"Jun 2024",Iceland:9.25,ECB:3.75,UK:5.25,Norway:4.50,Sweden:3.75,Switzerland:1.25,Poland:5.75,Hungary:7.00,"Czech Republic":4.75,Romania:7.00},
+  {date:"Jan 2025",Iceland:8.50,ECB:2.75,UK:4.50,Norway:4.50,Sweden:2.25,Switzerland:0.50,Poland:5.75,Hungary:6.50,"Czech Republic":4.00,Romania:6.50},
+  {date:"Jun 2025",Iceland:7.75,ECB:2.00,UK:4.25,Norway:4.25,Sweden:1.75,Switzerland:0.00,Poland:5.25,Hungary:6.50,"Czech Republic":3.50,Romania:6.50},
+  {date:"Feb 2026",Iceland:7.25,ECB:2.00,UK:3.75,Norway:4.00,Sweden:1.75,Switzerland:0.00,Poland:4.00,Hungary:6.50,"Czech Republic":3.50,Romania:6.50},
+];
+const histColors = {Iceland:"#0F4C81",ECB:"#003399",UK:"#1D3557",Norway:"#BA0C2F",Sweden:"#006AA7",Switzerland:"#D52B1E",Poland:"#DC143C",Hungary:"#CE2939","Czech Republic":"#11457E",Romania:"#002B7F"};
+
+/* ═══════ GDP HISTORY (annual, YoY%) ═══════ */
+const gdpHistory = [
+  {year:"2019",Eurozone:1.6,Iceland:1.9,UK:1.6,Norway:1.1,Switzerland:1.2,Poland:4.4,Hungary:4.9,"Czech Republic":3.0,Romania:4.2,Sweden:2.0,Denmark:1.5},
+  {year:"2020",Eurozone:-6.1,Iceland:-7.2,UK:-10.4,Norway:-0.7,Switzerland:-2.1,Poland:-2.0,Hungary:-4.5,"Czech Republic":-5.5,Romania:-3.7,Sweden:-2.2,Denmark:-2.4},
+  {year:"2021",Eurozone:5.9,Iceland:4.3,UK:8.7,Norway:3.9,Switzerland:5.4,Poland:6.9,Hungary:7.1,"Czech Republic":3.6,Romania:5.7,Sweden:6.1,Denmark:6.8},
+  {year:"2022",Eurozone:3.4,Iceland:7.2,UK:4.3,Norway:3.0,Switzerland:2.7,Poland:5.6,Hungary:4.6,"Czech Republic":2.4,Romania:4.1,Sweden:2.7,Denmark:2.7},
+  {year:"2023",Eurozone:0.4,Iceland:4.1,UK:0.3,Norway:0.5,Switzerland:0.7,Poland:0.2,Hungary:-0.8,"Czech Republic":-0.2,Romania:2.1,Sweden:-0.2,Denmark:2.5},
+  {year:"2024",Eurozone:0.9,Iceland:2.0,UK:1.1,Norway:0.7,Switzerland:1.3,Poland:2.9,Hungary:0.6,"Czech Republic":1.0,Romania:0.8,Sweden:1.0,Denmark:2.3},
+  {year:"2025",Eurozone:1.5,Iceland:1.5,UK:1.3,Norway:2.1,Switzerland:1.4,Poland:3.3,Hungary:0.7,"Czech Republic":2.7,Romania:1.5,Sweden:1.5,Denmark:1.5},
+];
+const gdpColors = {Eurozone:"#003399",Iceland:"#0F4C81",UK:"#1D3557",Norway:"#BA0C2F",Switzerland:"#D52B1E",Poland:"#DC143C",Hungary:"#CE2939","Czech Republic":"#11457E",Romania:"#002B7F",Sweden:"#006AA7",Denmark:"#C60C30"};
+
+/* ═══════ INFLATION HISTORY (annual avg CPI/HICP, %) ═══════ */
+const inflHistory = [
+  {year:"2019",Eurozone:1.2,Iceland:3.0,UK:1.8,Norway:2.2,Switzerland:0.4,Poland:2.3,Hungary:3.4,"Czech Republic":2.8,Romania:3.8,Sweden:1.7,Denmark:0.7},
+  {year:"2020",Eurozone:0.3,Iceland:2.8,UK:0.9,Norway:1.3,Switzerland:-0.7,Poland:3.4,Hungary:3.3,"Czech Republic":3.2,Romania:2.6,Sweden:0.7,Denmark:0.3},
+  {year:"2021",Eurozone:2.6,Iceland:4.4,UK:2.6,Norway:3.5,Switzerland:0.6,Poland:5.1,Hungary:5.1,"Czech Republic":3.8,Romania:5.1,Sweden:2.7,Denmark:1.9},
+  {year:"2022",Eurozone:8.4,Iceland:8.3,UK:9.1,Norway:5.8,Switzerland:2.8,Poland:14.4,Hungary:14.5,"Czech Republic":15.1,Romania:13.8,Sweden:8.1,Denmark:8.5},
+  {year:"2023",Eurozone:5.4,Iceland:8.7,UK:7.3,Norway:5.5,Switzerland:2.1,Poland:11.4,Hungary:17.6,"Czech Republic":10.7,Romania:10.4,Sweden:5.9,Denmark:3.4},
+  {year:"2024",Eurozone:2.4,Iceland:5.8,UK:3.5,Norway:3.2,Switzerland:1.1,Poland:3.7,Hungary:3.7,"Czech Republic":2.5,Romania:5.6,Sweden:2.3,Denmark:1.1},
+  {year:"2025",Eurozone:2.0,Iceland:4.0,UK:3.2,Norway:3.0,Switzerland:0.0,Poland:2.6,Hungary:3.6,"Czech Republic":2.1,Romania:5.5,Sweden:1.7,Denmark:1.4},
+];
+const inflColors = {Eurozone:"#003399",Iceland:"#0F4C81",UK:"#1D3557",Norway:"#BA0C2F",Switzerland:"#D52B1E",Poland:"#DC143C",Hungary:"#CE2939","Czech Republic":"#11457E",Romania:"#002B7F",Sweden:"#006AA7",Denmark:"#C60C30"};
+
+/* ═══════ HOUSING COST DATA (Eurostat 2024/2025, % of disposable income) ═══════ */
+const housingData = [
+  {country:"Greece",      costPct:36, overburden:28.9, flag:"🇬🇷"},
+  {country:"Denmark",     costPct:26, overburden:14.6, flag:"🇩🇰"},
+  {country:"Sweden",      costPct:25, overburden:10.6, flag:"🇸🇪"},
+  {country:"Germany",     costPct:25, overburden:12.0, flag:"🇩🇪"},
+  {country:"Norway",      costPct:25, overburden:null,  flag:"🇳🇴"},
+  {country:"Switzerland", costPct:25, overburden:null,  flag:"🇨🇭"},
+  {country:"Netherlands", costPct:24, overburden:8.3,  flag:"🇳🇱"},
+  {country:"Iceland",     costPct:23, overburden:null,  flag:"🇮🇸"},
+  {country:"Belgium",     costPct:21, overburden:7.0,  flag:"🇧🇪"},
+  {country:"France",      costPct:20, overburden:5.5,  flag:"🇫🇷"},
+  {country:"Austria",     costPct:20, overburden:6.1,  flag:"🇦🇹"},
+  {country:"EU Average",  costPct:19, overburden:8.2,  flag:"🇪🇺"},
+  {country:"Finland",     costPct:19, overburden:5.0,  flag:"🇫🇮"},
+  {country:"Czech Republic",costPct:19,overburden:9.2, flag:"🇨🇿"},
+  {country:"UK",          costPct:18, overburden:null,  flag:"🇬🇧"},
+  {country:"Spain",       costPct:17, overburden:7.0,  flag:"🇪🇸"},
+  {country:"Ireland",     costPct:17, overburden:5.5,  flag:"🇮🇪"},
+  {country:"Luxembourg",  costPct:16, overburden:8.5,  flag:"🇱🇺"},
+  {country:"Romania",     costPct:15, overburden:4.8,  flag:"🇷🇴"},
+  {country:"Hungary",     costPct:15, overburden:5.0,  flag:"🇭🇺"},
+  {country:"Poland",      costPct:15, overburden:5.0,  flag:"🇵🇱"},
+  {country:"Italy",       costPct:15, overburden:7.0,  flag:"🇮🇹"},
+  {country:"Bulgaria",    costPct:14, overburden:8.0,  flag:"🇧🇬"},
+  {country:"Croatia",     costPct:14, overburden:3.7,  flag:"🇭🇷"},
+  {country:"Portugal",    costPct:14, overburden:5.8,  flag:"🇵🇹"},
+  {country:"Slovakia",    costPct:13, overburden:4.3,  flag:"🇸🇰"},
+  {country:"Slovenia",    costPct:14, overburden:3.8,  flag:"🇸🇮"},
+  {country:"Lithuania",   costPct:12, overburden:4.0,  flag:"🇱🇹"},
+  {country:"Latvia",      costPct:13, overburden:5.5,  flag:"🇱🇻"},
+  {country:"Estonia",     costPct:15, overburden:5.0,  flag:"🇪🇪"},
+  {country:"Malta",       costPct:12, overburden:5.5,  flag:"🇲🇹"},
+  {country:"Cyprus",      costPct:11, overburden:2.4,  flag:"🇨🇾"},
+];
+
+/* ═══════ GDP PER CAPITA vs HOUSING (scatter data) ═══════ */
+const gdpPerCapita = [
+  {country:"Luxembourg",gdppc:131,costPct:16},{country:"Ireland",gdppc:106,costPct:17},
+  {country:"Switzerland",gdppc:99,costPct:25},{country:"Norway",gdppc:88,costPct:25},
+  {country:"Iceland",gdppc:75,costPct:23},{country:"Denmark",gdppc:68,costPct:26},
+  {country:"Netherlands",gdppc:60,costPct:24},{country:"Sweden",gdppc:58,costPct:25},
+  {country:"Austria",gdppc:57,costPct:20},{country:"Belgium",gdppc:54,costPct:21},
+  {country:"Finland",gdppc:53,costPct:19},{country:"Germany",gdppc:52,costPct:25},
+  {country:"France",gdppc:46,costPct:20},{country:"UK",gdppc:49,costPct:18},
+  {country:"Italy",gdppc:38,costPct:15},{country:"Spain",gdppc:33,costPct:17},
+  {country:"Czech Republic",gdppc:30,costPct:19},{country:"Slovenia",gdppc:32,costPct:14},
+  {country:"Estonia",gdppc:29,costPct:15},{country:"Portugal",gdppc:28,costPct:14},
+  {country:"Lithuania",gdppc:26,costPct:12},{country:"Poland",gdppc:22,costPct:15},
+  {country:"Latvia",gdppc:22,costPct:13},{country:"Hungary",gdppc:21,costPct:15},
+  {country:"Croatia",gdppc:20,costPct:14},{country:"Slovakia",gdppc:24,costPct:13},
+  {country:"Romania",gdppc:17,costPct:15},{country:"Greece",gdppc:24,costPct:36},
+  {country:"Bulgaria",gdppc:15,costPct:14},{country:"Cyprus",gdppc:33,costPct:11},
+  {country:"Malta",gdppc:36,costPct:12},
+];
+
+/* ═══════ UNEMPLOYMENT DATA (Eurostat, 2025 latest available, %) ═══════ */
+const unemploymentData = [
+  {country:"Czech Republic",unemp:2.6,youth:8.2},
+  {country:"Poland",unemp:3.0,youth:11.5},
+  {country:"Malta",unemp:3.2,youth:9.0},
+  {country:"Bulgaria",unemp:3.3,youth:12.0},
+  {country:"Slovenia",unemp:3.4,youth:9.5},
+  {country:"Switzerland",unemp:3.0,youth:8.0},
+  {country:"Germany",unemp:3.8,youth:6.8},
+  {country:"Netherlands",unemp:3.7,youth:9.2},
+  {country:"Hungary",unemp:4.4,youth:12.0},
+  {country:"Iceland",unemp:3.8,youth:9.0},
+  {country:"Norway",unemp:4.0,youth:10.5},
+  {country:"Ireland",unemp:4.3,youth:10.0},
+  {country:"UK",unemp:4.4,youth:13.0},
+  {country:"Denmark",unemp:5.0,youth:11.0},
+  {country:"Romania",unemp:5.5,youth:22.0},
+  {country:"Belgium",unemp:5.6,youth:14.5},
+  {country:"Austria",unemp:5.5,youth:10.5},
+  {country:"Slovakia",unemp:5.5,youth:15.0},
+  {country:"Estonia",unemp:7.0,youth:15.0},
+  {country:"Luxembourg",unemp:5.5,youth:17.0},
+  {country:"Croatia",unemp:5.5,youth:16.0},
+  {country:"Lithuania",unemp:6.0,youth:12.5},
+  {country:"Latvia",unemp:6.5,youth:13.0},
+  {country:"Portugal",unemp:6.5,youth:20.0},
+  {country:"Cyprus",unemp:5.5,youth:16.0},
+  {country:"France",unemp:7.5,youth:18.0},
+  {country:"Italy",unemp:6.0,youth:19.5},
+  {country:"Sweden",unemp:8.5,youth:23.6},
+  {country:"Greece",unemp:9.5,youth:25.0},
+  {country:"Finland",unemp:10.3,youth:20.0},
+  {country:"Spain",unemp:10.0,youth:23.4},
+];
+
+/* ═══════ UI COMPONENTS ═══════ */
+const Pill = ({active,onClick,children,color}) => (
+  <button onClick={onClick} style={{display:"inline-flex",alignItems:"center",gap:5,padding:"5px 12px",borderRadius:18,border:`1.5px solid ${active?(color||"#0F4C81"):"#ddd"}`,background:active?`${color||"#0F4C81"}10`:"#fff",color:active?(color||"#0F4C81"):"#aaa",fontWeight:600,fontSize:11,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",transition:"all .15s",whiteSpace:"nowrap"}}>
+    {color&&<span style={{width:7,height:7,borderRadius:"50%",background:active?color:"#d1d5db"}}/>}{children}
+  </button>
+);
+const Tab = ({active,onClick,children}) => (
+  <button onClick={onClick} style={{padding:"10px 16px",border:"none",borderBottom:active?"3px solid #0F4C81":"3px solid transparent",background:active?"rgba(15,76,129,.06)":"transparent",color:active?"#0F4C81":"#9ca3af",fontWeight:active?700:500,fontSize:12,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",letterSpacing:".01em",transition:"all .15s",whiteSpace:"nowrap"}}>{children}</button>
+);
+const Tip = ({active,payload,label}) => {
+  if(!active||!payload?.length) return null;
+  return (
+    <div style={{background:"rgba(255,255,255,.97)",border:"1px solid #e5e7eb",borderRadius:10,padding:"12px 16px",boxShadow:"0 6px 20px rgba(0,0,0,.1)",fontFamily:"'DM Sans',sans-serif",maxWidth:300}}>
+      <div style={{fontWeight:700,fontSize:12,marginBottom:6,color:"#374151"}}>{label}</div>
+      {payload.map((p,i)=>(<div key={i} style={{display:"flex",alignItems:"center",gap:6,padding:"2px 0"}}><span style={{width:8,height:8,borderRadius:"50%",background:p.color,flexShrink:0}}/><span style={{fontSize:11,color:"#6b7280",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.name}</span><span style={{fontSize:12,fontWeight:700,color:"#111",fontFamily:"'Space Mono',monospace"}}>{typeof p.value==='number'?p.value.toFixed(2):p.value}%</span></div>))}
+    </div>
+  );
+};
+const Note = ({children}) => (<div style={{fontSize:10,color:"#9ca3af",marginTop:8,fontStyle:"italic",fontFamily:"'Space Mono',monospace",textAlign:"center"}}>{children}</div>);
+
+/* ═══════ GOVERNMENT DEBT ═══════ */
+const govDebt = [
+  {country:"Greece",debt:154.2,deficit:-1.2,flag:"🇬🇷",group:"EZ South"},
+  {country:"Italy",debt:134.9,deficit:-3.4,flag:"🇮🇹",group:"EZ South"},
+  {country:"France",debt:113.2,deficit:-5.8,flag:"🇫🇷",group:"EZ Core"},
+  {country:"Belgium",debt:103.9,deficit:-4.4,flag:"🇧🇪",group:"EZ Core"},
+  {country:"Spain",debt:101.6,deficit:-3.2,flag:"🇪🇸",group:"EZ South"},
+  {country:"UK",debt:101.0,deficit:-4.5,flag:"🇬🇧",group:"Non-EU"},
+  {country:"Portugal",debt:95.8,deficit:0.5,flag:"🇵🇹",group:"EZ South"},
+  {country:"Austria",debt:81.5,deficit:-4.6,flag:"🇦🇹",group:"EZ Core"},
+  {country:"Finland",debt:80.0,deficit:-3.5,flag:"🇫🇮",group:"EZ Core"},
+  {country:"Hungary",debt:74.0,deficit:-4.5,flag:"🇭🇺",group:"EU non-€"},
+  {country:"Cyprus",debt:72.0,deficit:4.1,flag:"🇨🇾",group:"EZ South"},
+  {country:"Slovenia",debt:68.0,deficit:-3.0,flag:"🇸🇮",group:"EZ East"},
+  {country:"Croatia",debt:61.0,deficit:-2.5,flag:"🇭🇷",group:"EZ East"},
+  {country:"Germany",debt:62.0,deficit:-2.3,flag:"🇩🇪",group:"EZ Core"},
+  {country:"Iceland",debt:60.3,deficit:-1.5,flag:"🇮🇸",group:"Non-EU"},
+  {country:"Slovakia",debt:59.0,deficit:-5.5,flag:"🇸🇰",group:"EZ East"},
+  {country:"Romania",debt:55.0,deficit:-9.3,flag:"🇷🇴",group:"EU non-€"},
+  {country:"Poland",debt:55.0,deficit:-6.5,flag:"🇵🇱",group:"EU non-€"},
+  {country:"Norway",debt:53.3,deficit:12.0,flag:"🇳🇴",group:"Non-EU"},
+  {country:"Malta",debt:48.0,deficit:-3.2,flag:"🇲🇹",group:"EZ South"},
+  {country:"Latvia",debt:45.0,deficit:-3.0,flag:"🇱🇻",group:"EZ East"},
+  {country:"Netherlands",debt:44.0,deficit:-1.8,flag:"🇳🇱",group:"EZ Core"},
+  {country:"Czech Republic",debt:43.0,deficit:-2.8,flag:"🇨🇿",group:"EU non-€"},
+  {country:"Ireland",debt:38.3,deficit:4.0,flag:"🇮🇪",group:"EZ Core"},
+  {country:"Lithuania",debt:38.0,deficit:-2.0,flag:"🇱🇹",group:"EZ East"},
+  {country:"Switzerland",debt:38.0,deficit:0.5,flag:"🇨🇭",group:"Non-EU"},
+  {country:"Sweden",debt:34.0,deficit:-1.0,flag:"🇸🇪",group:"EU non-€"},
+  {country:"Denmark",debt:30.5,deficit:4.5,flag:"🇩🇰",group:"EU non-€"},
+  {country:"Luxembourg",debt:26.3,deficit:0.9,flag:"🇱🇺",group:"EZ Core"},
+  {country:"Bulgaria",debt:23.8,deficit:-2.5,flag:"🇧🇬",group:"EZ East"},
+  {country:"Estonia",debt:23.5,deficit:-2.0,flag:"🇪🇪",group:"EZ East"},
+];
+const debtGroupColors = {"EZ Core":"#003399","EZ South":"#AA151B","EZ East":"#006A44","EU non-€":"#CE2939","Non-EU":"#0F4C81"};
+
+/* ═══════ MAIN ═══════ */
+function App() {
+  const [tab, setTab] = useState(null);
+  const [yieldGroup, setYieldGroup] = useState("all");
+  const [sortYield, setSortYield] = useState("yield");
+  const [ycSel, setYcSel] = useState(["Iceland","Germany","Italy","UK","Poland","Hungary"]);
+  const [histSel, setHistSel] = useState(["Iceland","ECB","UK","Hungary","Poland"]);
+  const [gdpSel, setGdpSel] = useState(["Eurozone","Iceland","UK","Poland","Hungary"]);
+  const [inflSel, setInflSel] = useState(["Eurozone","Iceland","UK","Hungary","Poland"]);
+
+  const toggleYc = n => setYcSel(p => p.includes(n)?p.filter(x=>x!==n):[...p,n]);
+  const toggleHist = n => setHistSel(p => p.includes(n)?p.filter(x=>x!==n):[...p,n]);
+  const toggleGdp = n => setGdpSel(p => p.includes(n)?p.filter(x=>x!==n):[...p,n]);
+  const toggleInfl = n => setInflSel(p => p.includes(n)?p.filter(x=>x!==n):[...p,n]);
+
+  const sortedBanks = useMemo(() => [...centralBanks].sort((a,b) => b.rate - a.rate), []);
+  const ecbRate = 2.00;
+
+  const filteredYields = useMemo(() => {
+    let d = [...sovereignYields];
+    if (yieldGroup !== "all") d = d.filter(x => x.group === yieldGroup);
+    d.sort((a,b) => sortYield==="yield" ? b.yield10-a.yield10 : a.country.localeCompare(b.country));
+    return d;
+  }, [yieldGroup, sortYield]);
+
+  /* Linear yield curve data */
+  const linearYC = useMemo(() => {
+    const allPts = [];
+    ycSel.forEach(c => {
+      const cd = yieldCurves[c];
+      if (cd) cd.forEach(p => { allPts.push({ years: tenorMonths[p.t], yield: p.y, country: c, label: p.t }); });
+    });
+    return allPts;
+  }, [ycSel]);
+
+  /* For yield curve: we need a line chart with numeric X */
+  const ycLineData = useMemo(() => {
+    const xVals = [0.25,1,2,5,10,15,30];
+    return xVals.map(x => {
+      const pt = { years: x };
+      ycSel.forEach(c => {
+        const cd = yieldCurves[c];
+        if (cd) { const m = cd.find(p => tenorMonths[p.t] === x); if (m) pt[c] = m.y; }
+      });
+      return pt;
+    });
+  }, [ycSel]);
+
+  const spreadData = useMemo(() =>
+    sortedBanks.filter(b=>b.id!=="ecb").map(b => ({...b, spreadPct:+(b.rate-ecbRate).toFixed(2), label:`${b.country} (${b.abbr})`}))
+  , [sortedBanks]);
+
+  const eurozoneSorted = useMemo(() =>
+    sovereignYields.filter(y=>["EZ Core","EZ South","EZ East"].includes(y.group)).sort((a,b)=>b.yield10-a.yield10)
+  , []);
+
+  const compCountries = ["Hungary","Romania","Poland","UK","Norway","Italy","Greece","Portugal","Switzerland"];
+
+  return (
+    <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#f5f7fa 0%,#e8ecf2 100%)",fontFamily:"'DM Sans',sans-serif",color:"#1f2937"}}>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+
+      {/* HEADER */}
+      <div style={{background:"linear-gradient(135deg,#080e1a 0%,#0F4C81 55%,#1872b5 100%)",padding:"36px 28px 28px",position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",inset:0,opacity:.04,background:"repeating-linear-gradient(45deg,transparent,transparent 20px,#fff 20px,#fff 21px)"}} />
+        <div style={{position:"relative",maxWidth:1200,margin:"0 auto"}}>
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
+            <span style={{fontSize:20}}>🏦</span>
+            <span style={{fontSize:10,textTransform:"uppercase",letterSpacing:".12em",color:"rgba(255,255,255,.55)",fontWeight:700}}>European Economic Observatory</span>
+          </div>
+          <h1 style={{fontSize:30,fontWeight:800,color:"#fff",margin:"6px 0 4px",lineHeight:1.15}}>Iceland vs. Europe</h1>
+          <p style={{color:"rgba(255,255,255,.5)",fontSize:12,margin:0}}>Data fetched Feb 2026</p>
+        </div>
+      </div>
+
+      {/* TABS — directly under header */}
+      <div style={{maxWidth:1200,margin:"0 auto",padding:"0 20px"}}>
+        <div style={{display:"flex",gap:2,marginTop:12,borderBottom:"1px solid #e5e7eb",overflowX:"auto",alignItems:"center"}}>
+          <button onClick={()=>setTab(null)} style={{padding:"10px 16px",border:"none",borderBottom:tab===null?"3px solid #0F4C81":"3px solid transparent",background:tab===null?"rgba(15,76,129,.06)":"transparent",color:tab===null?"#0F4C81":"#9ca3af",fontWeight:tab===null?700:500,fontSize:12,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",letterSpacing:".01em",transition:"all .15s",whiteSpace:"nowrap"}}>Dashboard</button>
+          {[["macro","Macro"],["employment","Employment"],["debt","Gov't Debt"],["gdp","GDP Growth"],["inflation","Inflation"],["housing","Housing Costs"],["policy","Policy Rates"],["yields","10Y Yields"],["curves","Yield Curves"],["history","Rate History"]].map(([k,l])=>(
+            <Tab key={k} active={tab===k} onClick={()=>setTab(k)}>{l}</Tab>
+          ))}
+        </div>
+      </div>
+
+      <div style={{maxWidth:1200,margin:"0 auto",padding:"0 20px 60px"}}>
+        {/* ─── DASHBOARD ─── */}
+        {tab===null && (
+        <div style={{marginTop:20,position:"relative",zIndex:2}}>
+          <div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".08em",color:"#6b7280",marginBottom:10,paddingLeft:4}}>Selected Policy Rates in Europe and Iceland</div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(185px,1fr))",gap:12,marginBottom:16}}>
+            <div style={{background:"#fff",borderRadius:12,padding:"16px 18px",boxShadow:"0 1px 3px rgba(0,0,0,.05)",border:"1px solid #f0f0f0"}}>
+              <div style={{fontSize:12,fontWeight:700,color:"#0F4C81",marginBottom:2}}>Central Bank of Iceland</div>
+              <div style={{fontSize:26,fontWeight:800,color:"#0F4C81",fontFamily:"'Space Mono',monospace"}}>7.25%</div>
+            </div>
+            <div style={{background:"#fff",borderRadius:12,padding:"16px 18px",boxShadow:"0 1px 3px rgba(0,0,0,.05)",border:"1px solid #f0f0f0"}}>
+              <div style={{fontSize:12,fontWeight:700,color:"#003399",marginBottom:2}}>European Central Bank</div>
+              <div style={{fontSize:26,fontWeight:800,color:"#003399",fontFamily:"'Space Mono',monospace"}}>2.00%</div>
+            </div>
+            <div style={{background:"#fff",borderRadius:12,padding:"16px 18px",boxShadow:"0 1px 3px rgba(0,0,0,.05)",border:"1px solid #f0f0f0"}}>
+              <div style={{fontSize:12,fontWeight:700,color:"#CE2939",marginBottom:2}}>Hungarian National Bank</div>
+              <div style={{fontSize:26,fontWeight:800,color:"#CE2939",fontFamily:"'Space Mono',monospace"}}>6.50%</div>
+            </div>
+            <div style={{background:"#fff",borderRadius:12,padding:"16px 18px",boxShadow:"0 1px 3px rgba(0,0,0,.05)",border:"1px solid #f0f0f0"}}>
+              <div style={{fontSize:12,fontWeight:700,color:"#D52B1E",marginBottom:2}}>Swiss National Bank</div>
+              <div style={{fontSize:26,fontWeight:800,color:"#059669",fontFamily:"'Space Mono',monospace"}}>0.00%</div>
+              <div style={{fontSize:10,color:"#9ca3af",marginTop:2}}>Lowest in Europe</div>
+            </div>
+          </div>
+
+          {/* ─── 10Y GOVERNMENT BOND YIELDS ─── */}
+          <div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".08em",color:"#6b7280",marginBottom:10,paddingLeft:4}}>10-Year Government Interest Rates (Bond Yields)</div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(115px,1fr))",gap:10,marginBottom:24}}>
+            {["Iceland","Hungary","Romania","Poland","UK","Norway","Italy","Greece","Portugal","Switzerland"].map(c => {
+              const y = sovereignYields.find(x=>x.country===c);
+              if(!y) return null;
+              return (
+                <div key={c} style={{background:"#fff",borderRadius:10,padding:"12px 14px",border:"1px solid #f0f0f0",boxShadow:"0 1px 2px rgba(0,0,0,.03)"}}>
+                  <div style={{fontSize:11,fontWeight:700,color:"#374151",marginBottom:4}}>{c}</div>
+                  <div style={{fontSize:17,fontWeight:800,fontFamily:"'Space Mono',monospace",color:y.yield10>5?"#b45309":y.yield10>3.5?"#d97706":"#111"}}>{y.yield10.toFixed(2)}%</div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* ─── HOUSING vs GDP SCATTER on Dashboard ─── */}
+          <div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".08em",color:"#6b7280",marginBottom:10,paddingLeft:4}}>Housing Costs vs. GDP per Capita (2024)</div>
+          <div style={{background:"#fff",borderRadius:14,padding:24,boxShadow:"0 1px 4px rgba(0,0,0,.05)",border:"1px solid #f0f0f0"}}>
+            <ResponsiveContainer width="100%" height={420}>
+              <ScatterChart margin={{left:10,right:30,top:20,bottom:10}}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                <XAxis type="number" dataKey="gdppc" name="GDP/capita" domain={[10,140]}
+                  tick={{fontSize:11,fontFamily:"'Space Mono',monospace"}}
+                  tickFormatter={v=>`$${v}k`}
+                  label={{value:"GDP per capita ($k, 2024)",position:"insideBottom",offset:-5,fontSize:11,fill:"#9ca3af"}} />
+                <YAxis type="number" dataKey="costPct" name="Housing Cost"
+                  domain={[8,40]} reversed={true}
+                  tick={{fontSize:11,fontFamily:"'Space Mono',monospace"}}
+                  tickFormatter={v=>`${v}%`}
+                  label={{value:"Housing Cost % (↑ = lower cost)",angle:-90,position:"insideLeft",offset:10,fontSize:11,fill:"#9ca3af"}} />
+                <ReferenceArea x1={75} x2={140} y1={8} y2={23} fill="#dcfce7" fillOpacity={0.5} strokeOpacity={0} label={{value:"Better than Iceland",position:"insideTopRight",fontSize:10,fill:"#16a34a",fontWeight:600}} />
+                <ReferenceLine x={75} stroke="#0F4C81" strokeDasharray="4 4" strokeWidth={1} />
+                <ReferenceLine y={23} stroke="#0F4C81" strokeDasharray="4 4" strokeWidth={1} />
+                <Tooltip content={({active,payload})=>{
+                  if(!active||!payload?.length) return null;
+                  const d = payload[0]?.payload;
+                  if(!d) return null;
+                  return (<div style={{background:"rgba(255,255,255,.97)",border:"1px solid #e5e7eb",borderRadius:10,padding:"12px 16px",boxShadow:"0 6px 20px rgba(0,0,0,.1)",fontFamily:"'DM Sans',sans-serif"}}>
+                    <div style={{fontWeight:700,fontSize:13,marginBottom:4,color:"#374151"}}>{d.country}</div>
+                    <div style={{fontSize:12,color:"#6b7280"}}>GDP per capita: <span style={{fontWeight:700,color:"#111",fontFamily:"'Space Mono',monospace"}}>${d.gdppc}k</span></div>
+                    <div style={{fontSize:12,color:"#6b7280"}}>Housing cost: <span style={{fontWeight:700,color:"#111",fontFamily:"'Space Mono',monospace"}}>{d.costPct}%</span></div>
+                  </div>);
+                }} />
+                <Scatter data={gdpPerCapita} fill="#c4c8cc">
+                  {gdpPerCapita.map((e,i) => <Cell key={i} fill={e.country==="Iceland"?"#0F4C81":e.country==="Greece"?"#d97706":"#c4c8cc"} r={e.country==="Iceland"?8:e.country==="Greece"?7:5} />)}
+                </Scatter>
+              </ScatterChart>
+            </ResponsiveContainer>
+            <Note>Source: IMF WEO 2024, Eurostat EU-SILC 2024. Green zone = higher GDP per capita & lower housing cost than Iceland.</Note>
+          </div>
+        </div>
+        )}
+
+        {/* ═════ POLICY RATES ═════ */}
+        {tab==="policy" && (
+          <div style={{marginTop:24}}>
+            <h2 style={{fontSize:19,fontWeight:700,marginBottom:4}}>Central Bank Policy Rates</h2>
+            <p style={{fontSize:12,color:"#6b7280",marginBottom:20}}>11 central banks covering 31 countries.</p>
+            <div style={{background:"#fff",borderRadius:14,padding:24,boxShadow:"0 1px 4px rgba(0,0,0,.05)",border:"1px solid #f0f0f0",marginBottom:20}}>
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart data={sortedBanks} layout="vertical" margin={{left:0,right:40,top:5,bottom:5}}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" horizontal={false} />
+                  <XAxis type="number" domain={[0,8]} tick={{fontSize:11,fontFamily:"'Space Mono',monospace"}} tickFormatter={v=>`${v}%`} />
+                  <YAxis type="category" dataKey="abbr" width={50} tick={{fontSize:11,fontWeight:600}} />
+                  <Tooltip content={<Tip/>} />
+                  <Bar dataKey="rate" name="Policy Rate" radius={[0,5,5,0]} barSize={24}>
+                    {sortedBanks.map((e,i) => <Cell key={i} fill={e.color} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+              <Note>Real Rate = (1 + r_nominal) / (1 + π) − 1 (Fisher equation)</Note>
+            </div>
+
+            <div style={{background:"#fff",borderRadius:14,overflow:"hidden",boxShadow:"0 1px 4px rgba(0,0,0,.05)",border:"1px solid #f0f0f0"}}>
+              <div style={{overflowX:"auto"}}>
+                <table style={{width:"100%",borderCollapse:"collapse",fontSize:12,minWidth:860}}>
+                  <thead><tr style={{background:"#f9fafb"}}>
+                    {["Central Bank","CCY","Policy Rate","Inflation","GDP Growth","Real Rate","Spread vs ECB"].map(h=>(
+                      <th key={h} style={{padding:"12px 10px",textAlign:"left",fontWeight:700,fontSize:10,textTransform:"uppercase",letterSpacing:".05em",color:"#6b7280",borderBottom:"1px solid #e5e7eb",whiteSpace:"nowrap"}}>{h}</th>
+                    ))}
+                  </tr></thead>
+                  <tbody>
+                    {sortedBanks.map((d,i) => {
+                      const fr=fisherReal(d.rate,d.inflation), sp=d.rate-ecbRate;
+                      const nm = d.localName ? `${d.engName} (${d.localName})` : d.engName;
+                      return (
+                        <tr key={d.id} style={{borderBottom:i<sortedBanks.length-1?"1px solid #f3f4f6":"none"}}>
+                          <td style={{padding:"10px"}}><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{width:8,height:8,borderRadius:"50%",background:d.color,flexShrink:0}}/><div><div style={{fontWeight:700,fontSize:12}}>{nm}</div></div></div></td>
+                          <td style={{padding:"10px",fontFamily:"'Space Mono',monospace",fontWeight:600,fontSize:12,color:"#6b7280"}}>{d.ccy}</td>
+                          <td style={{padding:"10px",fontWeight:800,fontFamily:"'Space Mono',monospace",color:d.rate>5?"#b45309":"#111"}}>{d.rate.toFixed(2)}%</td>
+                          <td style={{padding:"10px",fontFamily:"'Space Mono',monospace"}}>{d.inflation.toFixed(1)}%</td>
+                          <td style={{padding:"10px"}}><span style={{fontFamily:"'Space Mono',monospace",fontWeight:700,color:d.gdp>2?"#059669":d.gdp>0?"#111":"#dc2626"}}>{d.gdp>=0?"+":""}{d.gdp.toFixed(1)}%</span><span style={{fontSize:9,color:"#b0b0b0",marginLeft:4}}>{d.gdpP}</span></td>
+                          <td style={{padding:"10px",fontFamily:"'Space Mono',monospace",fontWeight:700,color:fr>2?"#059669":fr>0?"#6b7280":"#dc2626"}}>{fr>=0?"+":""}{fr.toFixed(2)}%</td>
+                          <td style={{padding:"10px",fontFamily:"'Space Mono',monospace",fontWeight:700,color:sp>0?"#b45309":sp===0?"#6b7280":"#3b82f6"}}>{sp>=0?"+":""}{sp.toFixed(2)}%</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <Note>Inflation: 12-month HICP/CPI. Real Rate via Fisher equation: (1+r)/(1+π)−1. GDP: latest available.</Note>
+            </div>
+
+            <div style={{background:"#fff",borderRadius:14,padding:24,boxShadow:"0 1px 4px rgba(0,0,0,.05)",border:"1px solid #f0f0f0",marginTop:20}}>
+              <h3 style={{fontSize:14,fontWeight:700,marginBottom:12}}>Real Rates</h3>
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={sortedBanks.map(d=>({...d,fisher:+fisherReal(d.rate,d.inflation).toFixed(2)}))} margin={{left:0,right:10,top:5,bottom:5}}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                  <XAxis dataKey="abbr" tick={{fontSize:10,fontWeight:600}} />
+                  <YAxis tick={{fontSize:11,fontFamily:"'Space Mono',monospace"}} tickFormatter={v=>`${v}%`} />
+                  <Tooltip content={<Tip/>} />
+                  <ReferenceLine y={0} stroke="#9ca3af" strokeDasharray="4 4" />
+                  <Bar dataKey="fisher" name="Real Rate" radius={[5,5,0,0]} barSize={30}>
+                    {sortedBanks.map((e,i)=><Cell key={i} fill={fisherReal(e.rate,e.inflation)>=0?"#059669":"#dc2626"} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+              <Note>r_real = (1 + r_nominal) / (1 + π) − 1 · Positive = restrictive · Negative = accommodative</Note>
+            </div>
+          </div>
+        )}
+
+        {/* ═════ 10Y YIELDS ═════ */}
+        {tab==="yields" && (
+          <div style={{marginTop:24}}>
+            <h2 style={{fontSize:19,fontWeight:700,marginBottom:4}}>10-Year Sovereign Bond Yields</h2>
+            <p style={{fontSize:12,color:"#6b7280",marginBottom:16}}>31 countries across Europe.</p>
+            <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:12,alignItems:"center"}}>
+              <span style={{fontSize:11,color:"#9ca3af",fontWeight:600,marginRight:4}}>Filter:</span>
+              {[["all","All"],["EZ Core","EZ Core"],["EZ South","EZ South"],["EZ East","EZ East"],["EU non-€","EU non-€"],["Non-EU","Non-EU"]].map(([k,l])=>(<Pill key={k} active={yieldGroup===k} onClick={()=>setYieldGroup(k)}>{l}</Pill>))}
+              <span style={{fontSize:11,color:"#9ca3af",fontWeight:600,marginLeft:12,marginRight:4}}>Sort:</span>
+              <Pill active={sortYield==="yield"} onClick={()=>setSortYield("yield")}>By Yield</Pill>
+              <Pill active={sortYield==="name"} onClick={()=>setSortYield("name")}>A-Z</Pill>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(120px,1fr))",gap:10}}>
+              {filteredYields.map(d => (
+                <div key={d.country} style={{background:"#fff",borderRadius:10,padding:"12px 14px",border:"1px solid #f0f0f0",boxShadow:"0 1px 2px rgba(0,0,0,.03)"}}>
+                  <div style={{fontSize:16,marginBottom:2}}>{d.flag}</div>
+                  <div style={{fontSize:11,fontWeight:700,marginBottom:4,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{d.country}</div>
+                  <div style={{fontSize:18,fontWeight:800,fontFamily:"'Space Mono',monospace",color:d.yield10>5?"#b45309":d.yield10>3.5?"#d97706":"#111"}}>{d.yield10.toFixed(2)}%</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ═════ YIELD CURVES (linear x-axis) ═════ */}
+        {tab==="curves" && (
+          <div style={{marginTop:24}}>
+            <h2 style={{fontSize:19,fontWeight:700,marginBottom:4}}>Sovereign Yield Curves</h2>
+            <p style={{fontSize:12,color:"#6b7280",marginBottom:14}}>X-axis reflects actual time to maturity. Select countries to overlay.</p>
+            <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:18}}>
+              {Object.keys(yieldCurves).map(c => (<Pill key={c} active={ycSel.includes(c)} color={ycColors[c]} onClick={()=>toggleYc(c)}>{c}</Pill>))}
+            </div>
+            <div style={{background:"#fff",borderRadius:14,padding:24,boxShadow:"0 1px 4px rgba(0,0,0,.05)",border:"1px solid #f0f0f0"}}>
+              <ResponsiveContainer width="100%" height={440}>
+                <LineChart data={ycLineData} margin={{left:10,right:20,top:10,bottom:10}}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                  <XAxis dataKey="years" type="number" domain={[0,32]}
+                    ticks={[0.25,1,2,5,10,15,20,30]}
+                    tickFormatter={v => v<1?`${Math.round(v*12)}M`:`${v}Y`}
+                    tick={{fontSize:11,fontWeight:600}}
+                    label={{value:"Maturity",position:"insideBottom",offset:-5,fontSize:11,fill:"#9ca3af"}} />
+                  <YAxis tick={{fontSize:11,fontFamily:"'Space Mono',monospace"}} tickFormatter={v=>`${v}%`} domain={['auto','auto']} />
+                  <Tooltip content={({active,payload})=>{
+                    if(!active||!payload?.length) return null;
+                    const yr = payload[0]?.payload?.years;
+                    const lbl = yr<1?`${Math.round(yr*12)}M`:`${yr}Y`;
+                    return (<div style={{background:"rgba(255,255,255,.97)",border:"1px solid #e5e7eb",borderRadius:10,padding:"12px 16px",boxShadow:"0 6px 20px rgba(0,0,0,.1)",fontFamily:"'DM Sans',sans-serif"}}>
+                      <div style={{fontWeight:700,fontSize:12,marginBottom:6,color:"#374151"}}>{lbl}</div>
+                      {[...payload].sort((a,b)=>(b.value||0)-(a.value||0)).map((p,i)=>(<div key={i} style={{display:"flex",alignItems:"center",gap:6,padding:"2px 0"}}><span style={{width:8,height:8,borderRadius:"50%",background:p.color,flexShrink:0}}/><span style={{fontSize:11,color:"#6b7280",flex:1}}>{p.name}</span><span style={{fontSize:12,fontWeight:700,color:"#111",fontFamily:"'Space Mono',monospace"}}>{p.value?.toFixed(2)}%</span></div>))}
+                    </div>);
+                  }} />
+                  <Legend wrapperStyle={{fontSize:11,fontWeight:600}} />
+                  <ReferenceLine y={0} stroke="#d1d5db" />
+                  {ycSel.map(c => yieldCurves[c] ? (
+                    <Line key={c} type="monotone" dataKey={c} stroke={ycColors[c]} strokeWidth={c==="Iceland"?3.5:2}
+                      dot={{r:c==="Iceland"?5:3,fill:ycColors[c]}} activeDot={{r:6}} connectNulls />
+                  ):null)}
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+
+        {/* ═════ RATE HISTORY ═════ */}
+        {tab==="history" && (
+          <div style={{marginTop:24}}>
+            <h2 style={{fontSize:19,fontWeight:700,marginBottom:4}}>Policy Rate Evolution (2020–2026)</h2>
+            <p style={{fontSize:12,color:"#6b7280",marginBottom:14}}>10 central banks through pandemic, inflation shock, and easing cycle.</p>
+            <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:18}}>
+              {Object.keys(histColors).map(c => (<Pill key={c} active={histSel.includes(c)} color={histColors[c]} onClick={()=>toggleHist(c)}>{c}</Pill>))}
+            </div>
+            <div style={{background:"#fff",borderRadius:14,padding:24,boxShadow:"0 1px 4px rgba(0,0,0,.05)",border:"1px solid #f0f0f0"}}>
+              <ResponsiveContainer width="100%" height={440}>
+                <AreaChart data={histRates} margin={{left:10,right:20,top:10,bottom:10}}>
+                  <defs>{Object.entries(histColors).map(([k,c])=>(<linearGradient key={k} id={`hg-${k.replace(/\s/g,'-')}`} x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={c} stopOpacity={.12}/><stop offset="95%" stopColor={c} stopOpacity={0}/></linearGradient>))}</defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                  <XAxis dataKey="date" tick={{fontSize:10,fontWeight:500}} angle={-30} textAnchor="end" height={55} />
+                  <YAxis tick={{fontSize:11,fontFamily:"'Space Mono',monospace"}} tickFormatter={v=>`${v}%`} />
+                  <Tooltip content={<Tip/>} />
+                  <Legend wrapperStyle={{fontSize:11,fontWeight:600}} />
+                  {histSel.map(c => (<Area key={c} type="monotone" dataKey={c} stroke={histColors[c]} strokeWidth={c==="Iceland"?3:1.8} fill={`url(#hg-${c.replace(/\s/g,'-')})`} dot={{r:c==="Iceland"?4:2.5,fill:histColors[c]}} />))}
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+
+        {/* ═════ INFLATION HISTORY ═════ */}
+        {tab==="inflation" && (
+          <div style={{marginTop:24}}>
+            <h2 style={{fontSize:19,fontWeight:700,marginBottom:4}}>Inflation History (2019–2025)</h2>
+            <p style={{fontSize:12,color:"#6b7280",marginBottom:14}}>Annual average CPI/HICP inflation, year-on-year. 2025 figures are estimates or preliminary.</p>
+            <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:18}}>
+              {Object.keys(inflColors).map(c => (<Pill key={c} active={inflSel.includes(c)} color={inflColors[c]} onClick={()=>toggleInfl(c)}>{c}</Pill>))}
+            </div>
+            <div style={{background:"#fff",borderRadius:14,padding:24,boxShadow:"0 1px 4px rgba(0,0,0,.05)",border:"1px solid #f0f0f0"}}>
+              <ResponsiveContainer width="100%" height={440}>
+                <LineChart data={inflHistory} margin={{left:10,right:20,top:10,bottom:10}}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                  <XAxis dataKey="year" tick={{fontSize:12,fontWeight:600}} />
+                  <YAxis tick={{fontSize:11,fontFamily:"'Space Mono',monospace"}} tickFormatter={v=>`${v}%`} domain={['auto','auto']} />
+                  <Tooltip content={({active,payload,label})=>{
+                    if(!active||!payload?.length) return null;
+                    const sorted = [...payload].sort((a,b)=>(b.value||0)-(a.value||0));
+                    return (<div style={{background:"rgba(255,255,255,.97)",border:"1px solid #e5e7eb",borderRadius:10,padding:"12px 16px",boxShadow:"0 6px 20px rgba(0,0,0,.1)",fontFamily:"'DM Sans',sans-serif",maxWidth:300}}>
+                      <div style={{fontWeight:700,fontSize:12,marginBottom:6,color:"#374151"}}>{label}</div>
+                      {sorted.map((p,i)=>(<div key={i} style={{display:"flex",alignItems:"center",gap:6,padding:"2px 0"}}><span style={{width:8,height:8,borderRadius:"50%",background:p.color,flexShrink:0}}/><span style={{fontSize:11,color:"#6b7280",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.name}</span><span style={{fontSize:12,fontWeight:700,color:"#111",fontFamily:"'Space Mono',monospace"}}>{typeof p.value==='number'?p.value.toFixed(1):p.value}%</span></div>))}
+                    </div>);
+                  }} />
+                  <Legend wrapperStyle={{fontSize:11,fontWeight:600}} />
+                  <ReferenceLine y={2} stroke="#003399" strokeDasharray="4 4" strokeWidth={1.5} label={{value:"ECB 2% target",position:"right",fontSize:10,fill:"#003399"}} />
+                  {inflSel.map(c => inflColors[c] ? (
+                    <Line key={c} type="monotone" dataKey={c} stroke={inflColors[c]} strokeWidth={c==="Eurozone"||c==="Iceland"?3:2}
+                      dot={{r:3,fill:inflColors[c]}} activeDot={{r:6}} connectNulls />
+                  ):null)}
+                </LineChart>
+              </ResponsiveContainer>
+              <Note>Sources: Eurostat HICP, OECD CPI, national statistics offices. 2025 values are estimates. Dashed line = ECB 2% inflation target.</Note>
+            </div>
+          </div>
+        )}
+
+        {/* ═════ GDP GROWTH ═════ */}
+        {tab==="gdp" && (
+          <div style={{marginTop:24}}>
+            <h2 style={{fontSize:19,fontWeight:700,marginBottom:4}}>GDP Growth (2019–2025)</h2>
+            <p style={{fontSize:12,color:"#6b7280",marginBottom:14}}>Annual real GDP growth, year-on-year. 2025 figures are estimates or preliminary.</p>
+            <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:18}}>
+              {Object.keys(gdpColors).map(c => (<Pill key={c} active={gdpSel.includes(c)} color={gdpColors[c]} onClick={()=>toggleGdp(c)}>{c}</Pill>))}
+            </div>
+            <div style={{background:"#fff",borderRadius:14,padding:24,boxShadow:"0 1px 4px rgba(0,0,0,.05)",border:"1px solid #f0f0f0"}}>
+              <ResponsiveContainer width="100%" height={440}>
+                <LineChart data={gdpHistory} margin={{left:10,right:20,top:10,bottom:10}}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                  <XAxis dataKey="year" tick={{fontSize:12,fontWeight:600}} />
+                  <YAxis tick={{fontSize:11,fontFamily:"'Space Mono',monospace"}} tickFormatter={v=>`${v}%`} domain={['auto','auto']} />
+                  <Tooltip content={({active,payload,label})=>{
+                    if(!active||!payload?.length) return null;
+                    const sorted = [...payload].sort((a,b)=>(b.value||0)-(a.value||0));
+                    return (<div style={{background:"rgba(255,255,255,.97)",border:"1px solid #e5e7eb",borderRadius:10,padding:"12px 16px",boxShadow:"0 6px 20px rgba(0,0,0,.1)",fontFamily:"'DM Sans',sans-serif",maxWidth:300}}>
+                      <div style={{fontWeight:700,fontSize:12,marginBottom:6,color:"#374151"}}>{label}</div>
+                      {sorted.map((p,i)=>(<div key={i} style={{display:"flex",alignItems:"center",gap:6,padding:"2px 0"}}><span style={{width:8,height:8,borderRadius:"50%",background:p.color,flexShrink:0}}/><span style={{fontSize:11,color:"#6b7280",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.name}</span><span style={{fontSize:12,fontWeight:700,color:"#111",fontFamily:"'Space Mono',monospace"}}>{typeof p.value==='number'?p.value.toFixed(1):p.value}%</span></div>))}
+                    </div>);
+                  }} />
+                  <Legend wrapperStyle={{fontSize:11,fontWeight:600}} />
+                  <ReferenceLine y={0} stroke="#9ca3af" strokeDasharray="4 4" />
+                  {gdpSel.map(c => gdpColors[c] ? (
+                    <Line key={c} type="monotone" dataKey={c} stroke={gdpColors[c]} strokeWidth={c==="Eurozone"||c==="Iceland"?3:2}
+                      dot={{r:3,fill:gdpColors[c]}} activeDot={{r:6}} connectNulls />
+                  ):null)}
+                </LineChart>
+              </ResponsiveContainer>
+              <Note>Sources: Eurostat, OECD, national statistics offices. 2025 values are preliminary estimates or forecasts.</Note>
+            </div>
+          </div>
+        )}
+
+        {/* ═════ MACRO LINKAGES ═════ */}
+        {tab==="macro" && (() => {
+          const countries = ["Eurozone","Iceland","UK","Norway","Switzerland","Poland","Hungary","Czech Republic","Romania","Sweden","Denmark"];
+          const cColors = {Eurozone:"#003399",Iceland:"#0F4C81",UK:"#1D3557",Norway:"#BA0C2F",Switzerland:"#D52B1E",Poland:"#DC143C",Hungary:"#CE2939","Czech Republic":"#11457E",Romania:"#002B7F",Sweden:"#006AA7",Denmark:"#C60C30"};
+
+          /* flatten GDP vs Inflation */
+          const gdpVsInfl = [];
+          gdpHistory.forEach(row => {
+            const yr = row.year;
+            const iRow = inflHistory.find(r => r.year === yr);
+            if (!iRow) return;
+            countries.forEach(c => {
+              if (row[c] != null && iRow[c] != null) gdpVsInfl.push({ x: iRow[c], y: row[c], country: c, year: yr });
+            });
+          });
+
+          /* annual policy rates (approx mid-year or year-end) */
+          const rateByYear = {"2019":{}, "2020":{}, "2021":{}, "2022":{}, "2023":{}, "2024":{}, "2025":{}};
+          const rateMap = [["2019","Jan 2020"],["2020","Jun 2020"],["2021","Jun 2021"],["2022","Jun 2022"],["2023","Jun 2023"],["2024","Jun 2024"],["2025","Jun 2025"]];
+          rateMap.forEach(([yr, dt]) => {
+            const row = histRates.find(r => r.date === dt);
+            if (row) countries.forEach(c => { if (c === "Eurozone") { rateByYear[yr][c] = row["ECB"]; } else if (row[c] != null) { rateByYear[yr][c] = row[c]; }});
+          });
+
+          const inflVsRate = [];
+          inflHistory.forEach(row => {
+            const yr = row.year;
+            const rates = rateByYear[yr];
+            if (!rates) return;
+            countries.forEach(c => {
+              if (row[c] != null && rates[c] != null) inflVsRate.push({ x: row[c], y: rates[c], country: c, year: yr });
+            });
+          });
+
+          const scatterTip = ({active,payload}) => {
+            if(!active||!payload?.length) return null;
+            const d = payload[0]?.payload;
+            if(!d) return null;
+            return (<div style={{background:"rgba(255,255,255,.97)",border:"1px solid #e5e7eb",borderRadius:10,padding:"10px 14px",boxShadow:"0 4px 16px rgba(0,0,0,.1)",fontFamily:"'DM Sans',sans-serif"}}>
+              <div style={{fontWeight:700,fontSize:12,color:"#374151",marginBottom:2}}>{d.country} ({d.year})</div>
+              <div style={{fontSize:11,color:"#6b7280"}}>X: <span style={{fontWeight:700,color:"#111",fontFamily:"'Space Mono',monospace"}}>{d.x?.toFixed(1)}%</span></div>
+              <div style={{fontSize:11,color:"#6b7280"}}>Y: <span style={{fontWeight:700,color:"#111",fontFamily:"'Space Mono',monospace"}}>{d.y?.toFixed(1)}%</span></div>
+            </div>);
+          };
+
+          return (
+          <div style={{marginTop:24}}>
+            <h2 style={{fontSize:19,fontWeight:700,marginBottom:4}}>Macro (2019–2025)</h2>
+            <p style={{fontSize:12,color:"#6b7280",marginBottom:16}}>Each dot represents one country in one year. 11 economies × 7 years.</p>
+
+            <div style={{background:"#fffbeb",border:"1px solid #fde68a",borderRadius:12,padding:"16px 20px",marginBottom:24,fontSize:12,lineHeight:1.7,color:"#78350f"}}>
+              <span style={{fontWeight:700}}>A note on interpretation.</span> GDP growth and inflation tend to move together in the short run — when economies overheat, both rise; in recessions, both fall. Central banks respond by raising or lowering their <em>policy rate</em>, a very short-term overnight rate they set directly. This is visible in the second chart below. However, it is an oversimplification — and in many cases misleading in public debate — to assume that the policy rate determines longer-term interest rates such as mortgage rates. Long-term rates are shaped by government borrowing needs, bond market supply and demand, inflation expectations, global capital flows, and structural factors. A central bank can cut its policy rate to zero while 10-year bond yields and mortgage rates remain elevated. The policy rate is one input among many, not a direct lever on the rates that matter most to households and businesses.
+            </div>
+
+            {/* Chart 1: GDP Growth vs Inflation */}
+            <h3 style={{fontSize:15,fontWeight:700,marginBottom:4}}>GDP Growth vs. Inflation</h3>
+            <p style={{fontSize:12,color:"#6b7280",marginBottom:14}}>Does higher inflation correlate with higher or lower GDP growth? 11 economies × 7 years.</p>
+            <div style={{background:"#fff",borderRadius:14,padding:24,boxShadow:"0 1px 4px rgba(0,0,0,.05)",border:"1px solid #f0f0f0",marginBottom:28}}>
+              <ResponsiveContainer width="100%" height={440}>
+                <ScatterChart margin={{left:10,right:30,top:20,bottom:10}}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                  <XAxis type="number" dataKey="x" name="Inflation" domain={[-12,20]}
+                    tick={{fontSize:11,fontFamily:"'Space Mono',monospace"}} tickFormatter={v=>`${v}%`}
+                    label={{value:"Inflation (%)",position:"insideBottom",offset:-5,fontSize:11,fill:"#9ca3af"}} />
+                  <YAxis type="number" dataKey="y" name="GDP Growth" domain={[-12,20]}
+                    tick={{fontSize:11,fontFamily:"'Space Mono',monospace"}} tickFormatter={v=>`${v}%`}
+                    label={{value:"GDP Growth (%)",angle:-90,position:"insideLeft",offset:10,fontSize:11,fill:"#9ca3af"}} />
+                  <Tooltip content={scatterTip} />
+                  <Scatter name="Countries" data={gdpVsInfl} fill="#94a3b8" fillOpacity={0.7}>
+                    {gdpVsInfl.map((e,i) => <Cell key={i} fill={cColors[e.country]||"#94a3b8"} fillOpacity={e.country==="Iceland"?1:0.55} r={e.country==="Iceland"?6:4} />)}
+                  </Scatter>
+                </ScatterChart>
+              </ResponsiveContainer>
+              <Note>Each dot = one country-year (11 countries × 7 years). Sources: Eurostat, OECD, national statistics offices.</Note>
+            </div>
+
+            {/* Chart 2: Inflation vs Policy Rate */}
+            <h3 style={{fontSize:15,fontWeight:700,marginBottom:4}}>Inflation vs. Central Bank Policy Rate</h3>
+            <p style={{fontSize:12,color:"#6b7280",marginBottom:14}}>How closely do central banks track inflation with their policy rate? Same 11 economies × 7 years.</p>
+            <div style={{background:"#fff",borderRadius:14,padding:24,boxShadow:"0 1px 4px rgba(0,0,0,.05)",border:"1px solid #f0f0f0"}}>
+              <ResponsiveContainer width="100%" height={440}>
+                <ScatterChart margin={{left:10,right:30,top:20,bottom:10}}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                  <XAxis type="number" dataKey="x" name="Inflation" domain={[-2,20]}
+                    tick={{fontSize:11,fontFamily:"'Space Mono',monospace"}} tickFormatter={v=>`${v}%`}
+                    label={{value:"Inflation (%)",position:"insideBottom",offset:-5,fontSize:11,fill:"#9ca3af"}} />
+                  <YAxis type="number" dataKey="y" name="Policy Rate" domain={[-2,20]}
+                    tick={{fontSize:11,fontFamily:"'Space Mono',monospace"}} tickFormatter={v=>`${v}%`}
+                    label={{value:"Policy Rate (%)",angle:-90,position:"insideLeft",offset:10,fontSize:11,fill:"#9ca3af"}} />
+                  <Tooltip content={scatterTip} />
+                  <Scatter name="Countries" data={inflVsRate} fill="#94a3b8" fillOpacity={0.7}>
+                    {inflVsRate.map((e,i) => <Cell key={i} fill={cColors[e.country]||"#94a3b8"} fillOpacity={e.country==="Iceland"?1:0.55} r={e.country==="Iceland"?6:4} />)}
+                  </Scatter>
+                </ScatterChart>
+              </ResponsiveContainer>
+              <Note>Each dot = one country-year. Policy rates approximate mid-year values. Sources: ECB, national central banks, Eurostat, OECD.</Note>
+            </div>
+
+            {/* Legend */}
+            <div style={{display:"flex",flexWrap:"wrap",gap:10,marginTop:16,justifyContent:"center"}}>
+              {countries.map(c => (<div key={c} style={{display:"flex",alignItems:"center",gap:4,fontSize:10,fontWeight:600,color:"#6b7280"}}><span style={{width:8,height:8,borderRadius:"50%",background:cColors[c]}} />{c}</div>))}
+            </div>
+          </div>
+          );
+        })()}
+
+
+        {/* ═════ HOUSING COSTS ═════ */}
+        {tab==="housing" && (() => {
+          const housingSorted = [...housingData].sort((a,b)=>a.costPct-b.costPct);
+          return (
+          <div style={{marginTop:24}}>
+            {/* Scatter: Housing Cost % vs GDP per capita — FIRST */}
+            <h2 style={{fontSize:19,fontWeight:700,marginBottom:4}}>Housing Costs vs. GDP per Capita (2024)</h2>
+            <p style={{fontSize:12,color:"#6b7280",marginBottom:16}}>GDP per capita in thousands of USD (nominal, 2024). Housing cost as % of disposable income. Y-axis inverted — lower cost is better (higher on chart).</p>
+            <div style={{background:"#fff",borderRadius:14,padding:24,boxShadow:"0 1px 4px rgba(0,0,0,.05)",border:"1px solid #f0f0f0",marginBottom:28}}>
+              <ResponsiveContainer width="100%" height={480}>
+                <ScatterChart margin={{left:10,right:30,top:20,bottom:10}}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                  <XAxis type="number" dataKey="gdppc" name="GDP/capita" domain={[10,140]}
+                    tick={{fontSize:11,fontFamily:"'Space Mono',monospace"}}
+                    tickFormatter={v=>`$${v}k`}
+                    label={{value:"GDP per capita ($k, 2024)",position:"insideBottom",offset:-5,fontSize:11,fill:"#9ca3af"}} />
+                  <YAxis type="number" dataKey="costPct" name="Housing Cost"
+                    domain={[8,40]} reversed={true}
+                    tick={{fontSize:11,fontFamily:"'Space Mono',monospace"}}
+                    tickFormatter={v=>`${v}%`}
+                    label={{value:"Housing Cost % (↑ = lower cost)",angle:-90,position:"insideLeft",offset:10,fontSize:11,fill:"#9ca3af"}} />
+                  {/* Green quadrant: higher GDP & lower housing cost than Iceland (75k, 23%) */}
+                  <ReferenceArea x1={75} x2={140} y1={8} y2={23} fill="#dcfce7" fillOpacity={0.5} strokeOpacity={0} label={{value:"Better than Iceland",position:"insideTopRight",fontSize:10,fill:"#16a34a",fontWeight:600}} />
+                  {/* Reference lines at Iceland's values */}
+                  <ReferenceLine x={75} stroke="#0F4C81" strokeDasharray="4 4" strokeWidth={1} />
+                  <ReferenceLine y={23} stroke="#0F4C81" strokeDasharray="4 4" strokeWidth={1} />
+                  <Tooltip content={({active,payload})=>{
+                    if(!active||!payload?.length) return null;
+                    const d = payload[0]?.payload;
+                    if(!d) return null;
+                    return (<div style={{background:"rgba(255,255,255,.97)",border:"1px solid #e5e7eb",borderRadius:10,padding:"12px 16px",boxShadow:"0 6px 20px rgba(0,0,0,.1)",fontFamily:"'DM Sans',sans-serif"}}>
+                      <div style={{fontWeight:700,fontSize:13,marginBottom:4,color:"#374151"}}>{d.country}</div>
+                      <div style={{fontSize:12,color:"#6b7280"}}>GDP per capita: <span style={{fontWeight:700,color:"#111",fontFamily:"'Space Mono',monospace"}}>${d.gdppc}k</span></div>
+                      <div style={{fontSize:12,color:"#6b7280"}}>Housing cost: <span style={{fontWeight:700,color:"#111",fontFamily:"'Space Mono',monospace"}}>{d.costPct}%</span></div>
+                    </div>);
+                  }} />
+                  <Scatter data={gdpPerCapita} fill="#c4c8cc">
+                    {gdpPerCapita.map((e,i) => <Cell key={i} fill={e.country==="Iceland"?"#0F4C81":e.country==="Greece"?"#d97706":"#c4c8cc"} r={e.country==="Iceland"?8:e.country==="Greece"?7:5} />)}
+                  </Scatter>
+                </ScatterChart>
+              </ResponsiveContainer>
+              <Note>Source: IMF WEO 2024 (GDP per capita nominal USD), Eurostat EU-SILC 2024 (housing cost share). Iceland and Greece highlighted. Green zone = higher GDP per capita & lower housing cost than Iceland.</Note>
+            </div>
+
+            {/* Bar chart: Housing Costs as % of Income — SECOND */}
+            <h3 style={{fontSize:15,fontWeight:700,marginBottom:4}}>Housing Costs as % of Disposable Income (2024)</h3>
+            <p style={{fontSize:12,color:"#6b7280",marginBottom:20}}>Share of household disposable income spent on housing (rent/mortgage, utilities, maintenance). Eurostat EU-SILC 2024. Non-EU countries from OECD/national sources.</p>
+
+            <div style={{background:"#fff",borderRadius:14,padding:24,boxShadow:"0 1px 4px rgba(0,0,0,.05)",border:"1px solid #f0f0f0"}}>
+              <ResponsiveContainer width="100%" height={Math.max(500,housingSorted.length*26)}>
+                <BarChart data={housingSorted} layout="vertical" margin={{left:10,right:40,top:5,bottom:5}}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" horizontal={false} />
+                  <XAxis type="number" domain={[0,40]} tick={{fontSize:11,fontFamily:"'Space Mono',monospace"}} tickFormatter={v=>`${v}%`} />
+                  <YAxis type="category" dataKey="country" width={120} tick={{fontSize:11,fontWeight:600}} />
+                  <Tooltip formatter={(v)=>[`${v}%`,"Housing cost share (2024)"]} />
+                  <ReferenceLine x={19} stroke="#003399" strokeWidth={1.5} strokeDasharray="6 3" label={{value:"EU avg 19%",position:"top",fontSize:10,fill:"#003399"}} />
+                  <Bar dataKey="costPct" name="% of Income" radius={[0,5,5,0]} barSize={16}>
+                    {housingSorted.map((e,i) => <Cell key={i} fill={e.country==="Iceland"?"#0F4C81":"#c4c8cc"} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+              <Note>Source: Eurostat EU-SILC 2024, OECD. Housing costs include rent/mortgage, utilities, insurance, maintenance & taxes.</Note>
+            </div>
+          </div>
+          );
+        })()}
+
+        {/* ═════ EMPLOYMENT ═════ */}
+        {tab==="employment" && (
+          <div style={{marginTop:24}}>
+            <h2 style={{fontSize:19,fontWeight:700,marginBottom:4}}>Unemployment vs. Youth Unemployment (2025)</h2>
+            <p style={{fontSize:12,color:"#6b7280",marginBottom:16}}>Overall unemployment rate (15–74) versus youth unemployment rate (under 25). Both axes inverted — lower unemployment appears higher and further right. Countries in the green zone have lower rates than Iceland on both measures.</p>
+            <div style={{background:"#fff",borderRadius:14,padding:24,boxShadow:"0 1px 4px rgba(0,0,0,.05)",border:"1px solid #f0f0f0"}}>
+              <ResponsiveContainer width="100%" height={480}>
+                <ScatterChart margin={{left:10,right:30,top:20,bottom:10}}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                  <XAxis type="number" dataKey="unemp" name="Unemployment"
+                    domain={[1,12]} reversed={true}
+                    tick={{fontSize:11,fontFamily:"'Space Mono',monospace"}}
+                    tickFormatter={v=>`${v}%`}
+                    label={{value:"Overall Unemployment % (→ = lower)",position:"insideBottom",offset:-5,fontSize:11,fill:"#9ca3af"}} />
+                  <YAxis type="number" dataKey="youth" name="Youth Unemployment"
+                    domain={[4,28]} reversed={true}
+                    tick={{fontSize:11,fontFamily:"'Space Mono',monospace"}}
+                    tickFormatter={v=>`${v}%`}
+                    label={{value:"Youth Unemployment % (↑ = lower)",angle:-90,position:"insideLeft",offset:10,fontSize:11,fill:"#9ca3af"}} />
+                  <ReferenceArea x1={1} x2={3.8} y1={4} y2={9} fill="#dcfce7" fillOpacity={0.5} strokeOpacity={0} label={{value:"Better than Iceland",position:"insideTopRight",fontSize:10,fill:"#16a34a",fontWeight:600}} />
+                  <ReferenceLine x={3.8} stroke="#0F4C81" strokeDasharray="4 4" strokeWidth={1} />
+                  <ReferenceLine y={9} stroke="#0F4C81" strokeDasharray="4 4" strokeWidth={1} />
+                  <Tooltip content={({active,payload})=>{
+                    if(!active||!payload?.length) return null;
+                    const d = payload[0]?.payload;
+                    if(!d) return null;
+                    return (<div style={{background:"rgba(255,255,255,.97)",border:"1px solid #e5e7eb",borderRadius:10,padding:"12px 16px",boxShadow:"0 6px 20px rgba(0,0,0,.1)",fontFamily:"'DM Sans',sans-serif"}}>
+                      <div style={{fontWeight:700,fontSize:13,marginBottom:4,color:"#374151"}}>{d.country}</div>
+                      <div style={{fontSize:12,color:"#6b7280"}}>Unemployment: <span style={{fontWeight:700,color:"#111",fontFamily:"'Space Mono',monospace"}}>{d.unemp}%</span></div>
+                      <div style={{fontSize:12,color:"#6b7280"}}>Youth unemployment: <span style={{fontWeight:700,color:"#111",fontFamily:"'Space Mono',monospace"}}>{d.youth}%</span></div>
+                    </div>);
+                  }} />
+                  <Scatter data={unemploymentData} fill="#c4c8cc">
+                    {unemploymentData.map((e,i) => <Cell key={i}
+                      fill={e.country==="Iceland"?"#0F4C81":e.country==="Spain"||e.country==="Greece"?"#d97706":"#c4c8cc"}
+                      r={e.country==="Iceland"?8:e.country==="Spain"||e.country==="Greece"?7:5} />)}
+                  </Scatter>
+                </ScatterChart>
+              </ResponsiveContainer>
+              <Note>Source: Eurostat (une_rt_m), 2025 latest available. Youth = under 25, seasonally adjusted. Green zone = lower unemployment and lower youth unemployment than Iceland.</Note>
+            </div>
+
+            <div style={{background:"#f0f4ff",border:"1px solid #c7d2fe",borderRadius:12,padding:"16px 20px",marginTop:20,fontSize:12,lineHeight:1.7,color:"#312e81"}}>
+              <span style={{fontWeight:700}}>Finland's unemployment shock.</span> Finland now has the highest unemployment rate in the EU at over 10%, more than four percentage points above the bloc average — a dramatic reversal for a Nordic economy that was tracking the eurozone recovery until 2022. The rise stems from a collapse in labour demand amid weak growth, compounded by higher labour force participation that has pushed more people into the jobseeker pool. Crucially, as a eurozone member, Finland cannot adjust its exchange rate or set its own monetary policy to cushion the blow. The ECB's one-size-fits-all rate serves 21 economies simultaneously, leaving countries like Finland exposed when their cycle diverges from the core. This is a textbook illustration of the euro's structural constraint: monetary union without fiscal union means asymmetric shocks fall disproportionately on labour markets. Read more in <a href="https://jonegilsson.com/f/finland%E2%80%99s-unemployment-shock-and-the-euro%E2%80%99s-structural-constrain" target="_blank" rel="noopener noreferrer" style={{color:"#4338ca",fontWeight:700,textDecoration:"underline"}}>Finland's Unemployment Shock and the Euro's Structural Constraint</a>.
+            </div>
+          </div>
+        )}
+
+
+        {/* ═════ GOVERNMENT DEBT ═════ */}
+        {tab==="debt" && (
+          <div style={{marginTop:24}}>
+            <h2 style={{fontSize:22,fontWeight:800,marginBottom:6,lineHeight:1.3}}>Government Debt-to-GDP Ratios</h2>
+            <p style={{fontSize:13,color:"#6b7280",marginBottom:20}}>General government gross debt as % of GDP (end 2024). EU Stability & Growth Pact ceiling: 60%.</p>
+
+            <div style={{background:"#fff",borderRadius:14,padding:24,boxShadow:"0 1px 4px rgba(0,0,0,.05)",border:"1px solid #f0f0f0"}}>
+              <ResponsiveContainer width="100%" height={Math.max(620, govDebt.length * 22)}>
+                <BarChart data={[...govDebt].sort((a,b)=>b.debt-a.debt)} layout="vertical" margin={{left:110,right:40,top:10,bottom:10}}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" horizontal={false} />
+                  <XAxis type="number" tick={{fontSize:11,fontFamily:"'Space Mono',monospace"}} domain={[0,170]} tickFormatter={v=>`${v}%`} />
+                  <YAxis type="category" dataKey="country" tick={{fontSize:11,fontWeight:600}} width={100}
+                    tickFormatter={c => c} />
+                  <ReferenceLine x={60} stroke="#DC2626" strokeDasharray="6 4" strokeWidth={2}
+                    label={{value:"60% Maastricht",position:"top",fontSize:10,fill:"#DC2626",fontWeight:700}} />
+                  <ReferenceLine x={100} stroke="#9ca3af" strokeDasharray="3 3"
+                    label={{value:"100%",position:"top",fontSize:9,fill:"#9ca3af"}} />
+                  <Tooltip content={({active,payload})=>{
+                    if(!active||!payload?.length) return null;
+                    const d=payload[0]?.payload;
+                    return (<div style={{background:"rgba(255,255,255,.97)",border:"1px solid #e5e7eb",borderRadius:10,padding:"12px 16px",boxShadow:"0 6px 20px rgba(0,0,0,.1)",fontFamily:"'DM Sans',sans-serif",minWidth:200}}>
+                      <div style={{fontWeight:700,fontSize:13,marginBottom:6}}>{d.flag} {d.country}</div>
+                      <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:3}}><span style={{color:"#6b7280"}}>Debt / GDP</span><span style={{fontWeight:700,fontFamily:"'Space Mono',monospace"}}>{d.debt}%</span></div>
+                      <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:3}}><span style={{color:"#6b7280"}}>Budget balance</span><span style={{fontWeight:700,fontFamily:"'Space Mono',monospace",color:d.deficit>=0?"#16a34a":"#DC2626"}}>{d.deficit>0?"+":""}{d.deficit}%</span></div>
+                      <div style={{fontSize:10,color:"#9ca3af",marginTop:4}}>{d.group}</div>
+                    </div>);
+                  }} />
+                  <Bar dataKey="debt" radius={[0,4,4,0]} barSize={14}>
+                    {[...govDebt].sort((a,b)=>b.debt-a.debt).map((d,i) => (
+                      <Cell key={i} fill={d.country==="Iceland"?"#0F4C81":"#d1d5db"} fillOpacity={d.country==="Iceland"?1:0.8} stroke={d.country==="Iceland"?"#0F4C81":"none"} strokeWidth={d.country==="Iceland"?2:0} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+              <Note>Source: Eurostat (EDP notification Oct 2025), IMF WEO. Iceland & non-EU: IMF/national statistics. Budget balance = net lending/borrowing 2024.</Note>
+            </div>
+
+            {/* ─── DEBT vs DEFICIT SCATTER ─── */}
+            <div style={{marginTop:28}}>
+              <div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".08em",color:"#6b7280",marginBottom:6,paddingLeft:4}}>Debt Level vs. Budget Balance (2024)</div>
+              <p style={{fontSize:12,color:"#6b7280",marginBottom:14,paddingLeft:4}}>Countries in the upper-right quadrant have both high debt and fiscal surpluses (improving). Lower-right = high debt, still running deficits (fragile).</p>
+              <div style={{background:"#fff",borderRadius:14,padding:24,boxShadow:"0 1px 4px rgba(0,0,0,.05)",border:"1px solid #f0f0f0"}}>
+                <ResponsiveContainer width="100%" height={420}>
+                  <ScatterChart margin={{left:10,right:20,top:10,bottom:20}}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                    <XAxis type="number" dataKey="debt" name="Debt/GDP" tick={{fontSize:11,fontFamily:"'Space Mono',monospace"}}
+                      label={{value:"Debt-to-GDP (%)",position:"bottom",offset:5,fontSize:11,fill:"#6b7280"}}
+                      domain={[0,170]} />
+                    <YAxis type="number" dataKey="deficit" name="Budget Balance" tick={{fontSize:11,fontFamily:"'Space Mono',monospace"}}
+                      label={{value:"Budget balance (% GDP)",angle:-90,position:"insideLeft",offset:10,fontSize:11,fill:"#6b7280"}}
+                      domain={[-12,15]} />
+                    <ReferenceLine x={60} stroke="#DC2626" strokeDasharray="6 4" strokeWidth={1.5} />
+                    <ReferenceLine y={-3} stroke="#f59e0b" strokeDasharray="4 4" strokeWidth={1} />
+                    <Tooltip content={({active,payload})=>{
+                      if(!active||!payload?.length) return null;
+                      const d=payload[0]?.payload;
+                      return (<div style={{background:"rgba(255,255,255,.97)",border:"1px solid #e5e7eb",borderRadius:10,padding:"12px 16px",boxShadow:"0 6px 20px rgba(0,0,0,.1)",fontFamily:"'DM Sans',sans-serif"}}>
+                        <div style={{fontWeight:700,fontSize:13,marginBottom:4}}>{d.flag} {d.country}</div>
+                        <div style={{fontSize:11,color:"#6b7280"}}>Debt: <b style={{color:"#111"}}>{d.debt}%</b> · Balance: <b style={{color:d.deficit>=0?"#16a34a":"#DC2626"}}>{d.deficit>0?"+":""}{d.deficit}%</b></div>
+                      </div>);
+                    }} />
+                    <Scatter data={govDebt} fill="#3b82f6">
+                      {govDebt.map((d,i) => (
+                        <Cell key={i} fill={debtGroupColors[d.group]||"#6b7280"} fillOpacity={d.country==="Iceland"?1:0.65}
+                          stroke={d.country==="Iceland"?"#0F4C81":"#fff"} strokeWidth={d.country==="Iceland"?2.5:1.5} />
+                      ))}
+                    </Scatter>
+                  </ScatterChart>
+                </ResponsiveContainer>
+                <div style={{display:"flex",gap:14,justifyContent:"center",marginTop:8,flexWrap:"wrap"}}>
+                  {Object.entries(debtGroupColors).map(([g,c])=>(
+                    <div key={g} style={{display:"flex",alignItems:"center",gap:5,fontSize:10,color:"#6b7280"}}><span style={{width:10,height:10,borderRadius:"50%",background:c,opacity:.7}}/>{g}</div>
+                  ))}
+                </div>
+                <Note>Red vertical line: 60% Maastricht debt ceiling. Orange dashed: −3% deficit ceiling.</Note>
+              </div>
+            </div>
+          </div>
+        )}
+
+
+        {/* FOOTER */}
+        <div style={{marginTop:48,padding:"18px 0",borderTop:"1px solid #e5e7eb",fontSize:10,color:"#9ca3af",textAlign:"center",lineHeight:1.6}}>
+          Sources: ECB, BoE, Norges Bank, Riksbank, SNB, Seðlabanki Íslands, NBP, MNB, ČNB, BNR, Danmarks Nationalbank, Eurostat, IMF, OECD · Feb 2026
+          <br/>Real rates: Fisher equation (1+r)/(1+π)−1. Inflation: 12-month HICP/CPI. GDP: latest available. Bulgaria joined eurozone 1 Jan 2026. Not financial advice.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
