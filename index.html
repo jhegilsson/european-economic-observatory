@@ -7,10 +7,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
-  <script crossorigin src="https://unpkg.com/@babel/standalone@7.24.0/babel.min.js"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+  <script src="https://unpkg.com/recharts@2.5.0/umd/Recharts.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.24.0/babel.min.js"></script>
   <style>
     * { margin: 0; box-sizing: border-box; }
     body { font-family: 'DM Sans', sans-serif; background: #f5f6f8; }
@@ -476,7 +477,7 @@ function App() {
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
-              <Note>Real Rate = (1 + r_nominal) / (1 + π) − 1 (Fisher equation)</Note>
+              <Note>Real Rate = (1 + r_nominal) / (1 + π) - 1 (Fisher equation)</Note>
             </div>
 
             <div style={{background:"#fff",borderRadius:14,overflow:"hidden",boxShadow:"0 1px 4px rgba(0,0,0,.05)",border:"1px solid #f0f0f0"}}>
@@ -506,7 +507,7 @@ function App() {
                   </tbody>
                 </table>
               </div>
-              <Note>Inflation: 12-month HICP/CPI. Real Rate via Fisher equation: (1+r)/(1+π)−1. GDP: latest available.</Note>
+              <Note>Inflation: 12-month HICP/CPI. Real Rate via Fisher equation: (1+r)/(1+π)-1. GDP: latest available.</Note>
             </div>
 
             <div style={{background:"#fff",borderRadius:14,padding:24,boxShadow:"0 1px 4px rgba(0,0,0,.05)",border:"1px solid #f0f0f0",marginTop:20}}>
@@ -523,7 +524,7 @@ function App() {
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
-              <Note>r_real = (1 + r_nominal) / (1 + π) − 1 · Positive = restrictive · Negative = accommodative</Note>
+              <Note>r_real = (1 + r_nominal) / (1 + π) - 1 · Positive = restrictive · Negative = accommodative</Note>
             </div>
           </div>
         )}
@@ -982,7 +983,7 @@ function App() {
                     <div key={g} style={{display:"flex",alignItems:"center",gap:5,fontSize:10,color:"#6b7280"}}><span style={{width:10,height:10,borderRadius:"50%",background:c,opacity:.7}}/>{g}</div>
                   ))}
                 </div>
-                <Note>Red vertical line: 60% Maastricht debt ceiling. Orange dashed: −3% deficit ceiling.</Note>
+                <Note>Red vertical line: 60% Maastricht debt ceiling. Orange dashed: -3% deficit ceiling.</Note>
               </div>
             </div>
           </div>
@@ -992,15 +993,14 @@ function App() {
         {/* FOOTER */}
         <div style={{marginTop:48,padding:"18px 0",borderTop:"1px solid #e5e7eb",fontSize:10,color:"#9ca3af",textAlign:"center",lineHeight:1.6}}>
           Sources: ECB, BoE, Norges Bank, Riksbank, SNB, Seðlabanki Íslands, NBP, MNB, ČNB, BNR, Danmarks Nationalbank, Eurostat, IMF, OECD · Feb 2026
-          <br/>Real rates: Fisher equation (1+r)/(1+π)−1. Inflation: 12-month HICP/CPI. GDP: latest available. Bulgaria joined eurozone 1 Jan 2026. Not financial advice.
+          <br/>Real rates: Fisher equation (1+r)/(1+π)-1. Inflation: 12-month HICP/CPI. GDP: latest available. Bulgaria joined eurozone 1 Jan 2026. Not financial advice.
         </div>
       </div>
     </div>
   );
 }
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App />);
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
   </script>
 </body>
 </html>
